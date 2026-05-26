@@ -1,4 +1,4 @@
-# LOL25-Gold
+# League of Legends Gold Share Analysis
 
 This is a final project for DSC 80 at UC San Diego.
 
