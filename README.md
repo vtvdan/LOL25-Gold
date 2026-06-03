@@ -19,7 +19,7 @@ This is a final project for DSC 80 at UC San Diego.
 ## Fairness Analysis
 
 <iframe
-  src="assets/file-name.html"
+  src="assets/fairness_permutation_test.html"
   width="800"
   height="600"
   frameborder="0"
