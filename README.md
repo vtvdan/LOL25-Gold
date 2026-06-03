@@ -1,12 +1,12 @@
 # League of Legends Gold Share Analysis
 
-League of Legends Gold Share Analysis is a data science project delivered as a final for DSC at the University of California, San Diego. The project aims to explore whether Mid Laners or ADCs (Bot Laners) earn a higher share of a team's total gold in the 2025 League of Legends professional meta. Analysis is carried out in different stages that involve performing statistical methods such as hypothesis testing and creating predictive models.
+League of Legends Gold Share Analysis is a data science project delivered as a final for DSC 80 at the University of California, San Diego. The project aims to investigate resource prioritization and match predictibility within the 2025 League of Legends professional meta. By analyzing over thousands of matches within that year, this study explores how in-game gold is shared between Mid and Bot lane roles, assesses the impact of early-game objectives, and develops a predictive model to determine match results at the 15-minute mark.
 
 Author: Daniel Vinh Vuong
 
 ## Introduction
 ### Background
-League of Legends (often abbreviated as "LOL") is a highly popular team-based multiplayer strategy game created by American video game publisher Riot Games. Set on "Summoner's Rift," two teams of five players compete to destroy the enemy's base. Success in the game is driven by the accumulation of Gold—used to buy powerful items—and the securing of Objectives like Dragons and Void Grubs, which provide team-wide buffs.
+League of Legends (LoL), often referred to as League, is a highly popular team-based multiplayer strategy game developed by American video game publisher Riot Games. Set on "Summoner's Rift", the game's primary competitive map, two teams of five players compete in a match to destroy a structure within the opposing team's base called the "Nexus". Destroying the Nexus is the main objective in all League games; doing so allows a team to win a match. Success in the game is largely determined by the accumulation of resources like Gold and Objectives (Dragons and Void Grubs), which allow players to purchase items and gain pernament power-ups.
 
 ## Data Cleaning and Exploratory Data Analysis
 ### Data Cleaning
