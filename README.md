@@ -85,6 +85,7 @@ Splitting by match result, we observe an interesting pattern. Winning teams show
 
 ### Interesting Aggregates
 The table below shows the mean and median gold share broken down by all five positions:
+
 | position   |     mean |   median |        std |
 |:-----------|---------:|---------:|-----------:|
 | bot        | 0.236631 | 0.235945 | 0.0209985  |
@@ -142,6 +143,8 @@ The 15-minute mark is chosen because it a natural checkpoint in professional pla
 
 All features used in the model (gold differences, objective counts, side) are observable at or before 15 minutes, so there is no data leakage.
 
+Note: The dataset used from this point forward differs from the one used in the hypothesis test. While the hypothesis test examined individual player rows filtered to Mid and Bot lane, the prediction model operates on team-level summary rows (`position == 'team'`), since we are predicting the outcome of the match as a whole rather than individual player behavior.
+
 ## Baseline Model
 The baseline model uses **Logistic Regression** with two features: `golddiffat15` (quantitative) and `side` (nominal). We applied `OneHotEncoder` to convert `side` into a binary numeric format, and used `train_test_split` with 75/25 to evaluate generalization to unseen data.
 
@@ -158,9 +161,9 @@ While 73.5% is a reasonable starting point, this model has a fundamental limitat
 ### Feature Engineering
 To address the baseline's limitations, we engineered two new features rooted in how professional League of Legends is actually played.
 
-The first is **Lead Momentum**, calculated as the change in gold differential between 10 and 15 minutes (`(goldat15 - opp_goldat15) - (goldat10 - opp_goldat10)`). Rather than treating the game state as a static snapshot, this feature captures the velocity of the gold lead. A team that is 2,000 gold ahead but was 3,500 ahead five minutes ago is in a very different position than a team that just swung from -500 to +1,500, yet both would look similar to the baseline model. Lead Momentum distinguishes these scenarios by measuring whether a lead is actively snowballing or being clawed back.
+The first is **Lead Momentum**, derived from the columns `goldat10`, `opp_goldat10`, `goldat15`, and `opp_goldat15`, and calculated as the change in gold differential between 10 and 15 minutes, specifically `(goldat15 - opp_goldat15) - (goldat10 - opp_goldat10)`. Rather than treating the game state as a static snapshot, this feature captures the velocity of the gold lead. A team that is 2,000 gold ahead but was 3,500 ahead five minutes ago is in a very different position than a team that just swung from -500 to +1,500, yet both would look similar to the baseline model. Lead Momentum distinguishes these scenarios by measuring whether a lead is actively snowballing or being clawed back.
 
-The second is **Objective Density**, calculated as the total sum of Dragons and Void Grubs secured by a team by the 15-minute mark. These objectives provide permanent buffs that compound over time: dragon stacks grant elemental bonuses that grow in impact, while Void Grubs accelerate structural damage to the enemy base. By combining them into a single density metric, we capture how effectively a team has converted early map pressure into durable advantages that persist regardless of future gold swings.
+The second is **Objective Density**, derived from the columns `elementaldrakes` and `void_grubs`, and calculated as their sum at the 15-minute mark. These objectives provide permanent buffs that compound over time: dragon stacks grant elemental bonuses that grow in impact, while Void Grubs accelerate structural damage to the enemy base. By combining them into a single density metric, we capture how effectively a team has converted early map pressure into durable advantages that persist regardless of future gold swings.
 
 We retained `golddiffat15` and `side` from the baseline to preserve the signal we know works, and applied `StandardScaler` to all numeric features to ensure no single variable dominates the model.
 
