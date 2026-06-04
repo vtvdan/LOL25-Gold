@@ -142,9 +142,9 @@ Since p < 0.05, we **reject the null hypothesis**. With an observed difference o
 ## Framing a Prediction Problem
 - **Prediction Problem**: Can we predict whether a team will win or lose a match based on their early-game resource and objective advantages (up to the 15-minute mark)?
 - **Type**: Binary Classification (the response variable `result` takes value 1 (win) or 0 (loss), with no ties possible in League of Legends).
-- **Response Variable**: We chose `result` as the response variable because it is the only outcome that matters. Every strategic decision in the game is ultimately made in service of winning.
-- **Metric**: Accuracy is chosen as our metric because professional matches are zero-sum, making raw accuracy the most intuitive measure of success.
-- **Time of Prediction**: All features are strictly limited to data available at or before 15 minutes to avoid data leakage.
+- **Response Variable**: We chose `result` as the response variable because it is the most direct measure of success in competitive League of Legends, making it the natural target for prediction.
+- **Evaluation Metric**: Accuracy is chosen as our metric since the dataset is balanced (every game has exactly one winning and one losing team), so accuracy is a fair and interpretable measure of model performance.
+- **Time of Prediction**: All features are strictly limited to data available at or before 15 minutes (`goldat10`, `opp_goldat10`, `goldat15`, `opp_goldat15`, `elementaldrakes`, `void_grubs`, `side`). This ensures no data leakage.
 
 The 15-minute mark is chosen because it a natural checkpoint in professional play. It is when teams can first formally surrender, when most early objectives have been contested, and when draft advantages begin to manifest in gold and map control. Predicting outcomes at this point tests whether early advantages are truly meaningful, not just whether a team that is already winning will continue to win.
 
@@ -160,17 +160,17 @@ The baseline model uses **Logistic Regression** with two features: `golddiffat15
 - Nominal: 1 (`side`, one-hot encoded)
 - Ordinal: 0
 
-**Baseline Accuracy**: **~73.11%**
+**Baseline Accuracy**: **~72.39%**
 
-While 73.11% is a reasonable starting point, this model has a fundamental limitation. Essentially, it treats the game state as a static snapshot. For example, a team that is 2,000 gold ahead at 15 minutes but was 3,000 ahead at 10 minutes is actually losing momentum, while a team that clawed from -500 to +1,500 is on an upswing. Both look identical to this model. Additionally, the baseline completely ignores objective control. Dragons and Void Grubs, for example, grant permanent map pressure and structural advantages that persist for the rest of the game regardless of gold fluctuations. A model blind to these factors is missing critical information about the true state of the game at 15 minutes, which motivates the feature engineering in our final model.
+While 72.39% is a reasonable starting point, it is not yet strong enough to be considered a reliable predictor. This model has a fundamental limitation in that it treats the game state as a static snapshot. For example, a team that is 2,000 gold ahead at 15 minutes but was 3,000 ahead at 10 minutes is actually losing momentum, while a team that clawed from -500 to +1,500 is on an upswing. Both look identical to this model. Additionally, the baseline completely ignores objective control. Dragons and Void Grubs, for example, grant permanent map pressure and structural advantages that persist throughout the rest of the game regardless of gold fluctuations. A model blind to these factors is missing critical information about the true state of the game at 15 minutes, which motivates the feature engineering in our final model.
 
 ## Final Model
 ### Feature Engineering
 To address the baseline's limitations, we engineered two new features rooted in how professional League of Legends is actually played.
 
-The first is **Lead Momentum**, derived from the columns `goldat10`, `opp_goldat10`, `goldat15`, and `opp_goldat15`, and calculated as the change in gold differential between 10 and 15 minutes, specifically `(goldat15 - opp_goldat15) - (goldat10 - opp_goldat10)`. Rather than treating the game state as a static snapshot, this feature captures the velocity of the gold lead. A team that is 2,000 gold ahead but was 3,500 ahead five minutes ago is in a very different position than a team that just swung from -500 to +1,500, yet both would look similar to the baseline model. Lead Momentum distinguishes these scenarios by measuring whether a lead is actively snowballing or being clawed back.
+The first is **Lead Momentum**, derived from the columns `goldat10`, `opp_goldat10`, `goldat15`, and `opp_goldat15`, and calculated as the change in gold differential between 10 and 15 minutes, specifically `(goldat15 - opp_goldat15) - (goldat10 - opp_goldat10)`. Rather than treating the game state as a static snapshot, this feature captures the velocity of the gold lead. A team that is 2,000 gold ahead but was 3,500 ahead five minutes ago is in a very different position than a team that just swung from -500 to +1,500. Yet, both would look similar to the baseline model. Lead Momentum distinguishes these scenarios by measuring whether a team's advantage is accelerating or stalling, which is a strong signal of map control and win probability.
 
-The second is **Objective Density**, derived from the columns `elementaldrakes` and `void_grubs`, and calculated as their sum at the 15-minute mark. These objectives provide permanent buffs that compound over time: dragon stacks grant elemental bonuses that grow in impact, while Void Grubs accelerate structural damage to the enemy base. By combining them into a single density metric, we capture how effectively a team has converted early map pressure into durable advantages that persist regardless of future gold swings.
+The second is **Objective Density**, derived from the columns `elementaldrakes` and `void_grubs`, and calculated as their sum at the 15-minute mark. These objectives provide permanent buffs that compound over time. Dragon stacks grant elemental bonuses that grow in impact, while Void Grubs accelerate structural damage to the enemy base. By combining them into a single density metric, we capture how effectively a team has converted early map pressure into durable advantages that persist regardless of future gold swings.
 
 We retained `golddiffat15` and `side` from the baseline to preserve the signal we know works, and applied `StandardScaler` to all numeric features to ensure no single variable dominates the model.
 
@@ -181,20 +181,20 @@ We tuned four hyperparameters using **GridSearchCV with 5-fold cross validation*
 
 **Final Model Accuracy**: **76.21%**
 
-Test accuracy improved from 73.11% in the baseline to 76.21% in the final model, demonstrating that game trajectory and objective control carry genuine predictive signal beyond a simple gold snapshot alone.
+Test accuracy improved from 72.39% in the baseline to 76.21% in the final model, demonstrating that game trajectory and objective control carry genuine predictive signal beyond a simple gold snapshot alone.
 
 ## Fairness Analysis
-We investigated whether our model produces equally reliable predictions for Blue Side and Red Side teams, given that map asymmetries give each side different objective access.
+We investigated whether our model produces equally reliable predictions for **Blue Side** and **Red Side** teams, given that map asymmetries give each side different objective access.
 
 - **Metric**: Precision for predicting a win.
-- **Null Hypothesis (H<sub>0</sub>)**: The model is fair; precision for Blue and Red sides are roughly equal, and any difference is due to random chance.
-- **Alternative Hypothesis (H<sub>1</sub>)**: The model is unfair; precision differs between Blue and Red sides.
+- **Null Hypothesis (H<sub>0</sub>)**: The model is fair. Precision for Blue and Red sides are roughly equal, and any difference is due to random chance.
+- **Alternative Hypothesis (H<sub>1</sub>)**: The model is unfair. Precision differs between Blue and Red sides.
 - **Test Statistic**: Absolute difference in precision
 - **Significance Level**: 0.05
 
-**Observed Difference**: 0.0134 | **P-value**: 0.4640
+**Observed Difference**: 0.0134 | **P-value**: 0.4280
 
-Since p = 0.464 > 0.05, we **fail to reject the null hypothesis**. The observed precision difference falls well within the range of what we would expect by chance. We conclude that the model produces equally reliable win predictions for both Blue and Red side teams, despite the well-known map asymmetries. This suggests the model has learned generalizable patterns about early-game advantages rather than overfit to side-specific tendencies.
+Since p = 0.428 > 0.05, we **fail to reject the null hypothesis**. The observed precision difference falls well within the range of what we would expect by chance. We conclude that the model produces equally reliable win predictions for both Blue and Red side teams, despite the well-known map asymmetries. This suggests the model has learned generalizable patterns about early-game advantages rather than overfit to side-specific tendencies.
 
 <iframe
   src="assets/fairness_permutation_test.html"
