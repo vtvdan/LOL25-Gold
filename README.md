@@ -161,9 +161,9 @@ The baseline model uses **Logistic Regression** with two features: `golddiffat15
 - Nominal: 1 (`side`, one-hot encoded)
 - Ordinal: 0
 
-**Baseline Accuracy**: **~73.65%**
+**Baseline Accuracy**: **~74.17%**
 
-While 73.65% is a reasonable starting point, this model has a fundamental limitation. Essentially, it treats the game state as a static snapshot. For example, a team that is 2,000 gold ahead at 15 minutes but was 3,000 ahead at 10 minutes is actually losing momentum, while a team that clawed from -500 to +1,500 is on an upswing. Both look identical to this model. Additionally, the baseline completely ignores objective control. Dragons and Void Grubs, for example, grant permanent map pressure and structural advantages that persist for the rest of the game regardless of gold fluctuations. A model blind to these factors is missing critical information about the true state of the game at 15 minutes, which motivates the feature engineering in our final model.
+While 74.17% is a reasonable starting point, this model has a fundamental limitation. Essentially, it treats the game state as a static snapshot. For example, a team that is 2,000 gold ahead at 15 minutes but was 3,000 ahead at 10 minutes is actually losing momentum, while a team that clawed from -500 to +1,500 is on an upswing. Both look identical to this model. Additionally, the baseline completely ignores objective control. Dragons and Void Grubs, for example, grant permanent map pressure and structural advantages that persist for the rest of the game regardless of gold fluctuations. A model blind to these factors is missing critical information about the true state of the game at 15 minutes, which motivates the feature engineering in our final model.
 
 ## Final Model
 ### Feature Engineering
@@ -182,7 +182,7 @@ We tuned four hyperparameters using **GridSearchCV with 5-fold cross validation*
 
 **Final Model Accuracy**: **76.21%**
 
-Test accuracy improved from 73.65% in the baseline to 76.21% in the final model, demonstrating that game trajectory and objective control carry genuine predictive signal beyond a simple gold snapshot alone.
+Test accuracy improved from 74.17% in the baseline to 76.21% in the final model, demonstrating that game trajectory and objective control carry genuine predictive signal beyond a simple gold snapshot alone.
 
 ## Fairness Analysis
 We investigated whether our model produces equally reliable predictions for Blue Side and Red Side teams, given that map asymmetries give each side different objective access.
@@ -193,9 +193,9 @@ We investigated whether our model produces equally reliable predictions for Blue
 - **Test Statistic**: Absolute difference in precision
 - **Significance Level**: 0.05
 
-**Observed Difference**: 0.0134 | **P-value**: 0.4600
+**Observed Difference**: 0.0134 | **P-value**: 0.4430
 
-Since p = 0.46 > 0.05, we **fail to reject the null hypothesis**. The observed precision difference falls well within the range of what we would expect by chance. We conclude that the model produces equally reliable win predictions for both Blue and Red side teams, despite the well-known map asymmetries. This suggests the model has learned generalizable patterns about early-game advantages rather than overfit to side-specific tendencies.
+Since p = 0.443 > 0.05, we **fail to reject the null hypothesis**. The observed precision difference falls well within the range of what we would expect by chance. We conclude that the model produces equally reliable win predictions for both Blue and Red side teams, despite the well-known map asymmetries. This suggests the model has learned generalizable patterns about early-game advantages rather than overfit to side-specific tendencies.
 
 <iframe
   src="assets/fairness_permutation_test.html"
