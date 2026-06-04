@@ -49,6 +49,7 @@ We first examined the distribution of raw gold earned across all players. This g
   width="800"
   height="600"
   frameborder="0"
+  scrolling="no"
 ></iframe>
 
 The distribution of total gold earned across all players is roughly bell-shaped and centered around 12,000–15,000 gold, with a long right tail representing players in longer games who accumulate significantly more wealth. This confirms that raw gold is a poor basis for role comparison, as game length introduces substantial variance. A player with 18,000 gold in a 40-minute game may have actually been deprioritized relative to a player with 14,000 gold in a 25-minute game. This is exactly why we engineered the `gold_share` metric instead.
@@ -58,6 +59,7 @@ The distribution of total gold earned across all players is roughly bell-shaped 
   width="800"
   height="600"
   frameborder="0"
+  scrolling="no"
 ></iframe>
 
 The distribution of gold share per player reveals a clear bimodal structure. There is a small cluster around 13–14% representing Support players, who deliberately sacrifice personal resources to empower teammates. The much larger cluster between 19–26% represents the four carry roles. Notably, the carry cluster sits above the theoretical 20% equal-split baseline, confirming that teams intentionally funnel extra gold into specific roles, and that this prioritization is consistent across the entire dataset.
@@ -70,6 +72,7 @@ We then compared gold share specifically between Mid Laners and ADCs (Bot Lane) 
   width="800"
   height="600"
   frameborder="0"
+  scrolling="no"
 ></iframe>
 
 ADCs show a consistently higher median gold share than Mid Laners. The ADC distribution also has a tighter interquartile range, meaning this prioritization is more consistent across teams and regions. It is closer to a universal rule than a team-specific choice. Mid Laners show more variance, suggesting that while some teams heavily invest in their Mid Laner, others treat it as a secondary carry role. The 2025 meta appears to heavily favor the ADC as the primary gold beneficiary.
@@ -79,6 +82,7 @@ ADCs show a consistently higher median gold share than Mid Laners. The ADC distr
   width="800"
   height="600"
   frameborder="0"
+  scrolling="no"
 ></iframe>
 
 Splitting by match result, we observe an interesting pattern. Winning teams show slightly higher gold shares for their ADCs compared to losing teams, while the difference for Mid Laners is less pronounced. This is consistent with a snowball effect, in which teams that are winning can afford to funnel even more gold into their primary carry, amplifying the lead. The fact that this effect is stronger for ADCs than Mid Laners further supports the idea that the ADC is the meta's designated carry role.
@@ -113,6 +117,7 @@ We shuffled the missingness labels 500 times and compared the TVD of each shuffl
   width="800"
   height="600"
   frameborder="0"
+  scrolling="no"
 ></iframe>
 
 **Test 2: Does missingness of `golddiffat15` depend on `side`?**
@@ -137,6 +142,7 @@ Since p < 0.05, we **reject the null hypothesis**. With an observed difference o
   width="800"
   height="600"
   frameborder="0"
+  scrolling="no"
 ></iframe>
 
 ## Framing a Prediction Problem
@@ -201,4 +207,5 @@ Since p = 0.469 > 0.05, we **fail to reject the null hypothesis**. The observed 
   width="800"
   height="600"
   frameborder="0"
+  scrolling="no"
 ></iframe>
