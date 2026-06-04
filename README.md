@@ -24,12 +24,11 @@ The dataset used for this analysis is retrieved from Oracle's Elixir, a highly r
 
 ## Data Cleaning and Exploratory Data Analysis
 ### Data Cleaning
-To isolate player-specific prioritization, we filtered the raw dataset to include only individual player rows (`position != 'team'`), removing all team-level summary rows for the initial analysis. We converted `datacompleteness` to strings and fixed boolean-adjacent types to ensure accurate processing.
+To prepare the dataset for analysis, several cleaning steps were necessary. First, the raw dataset contains 12 rows per game: one for each of the 5 players on both teams, plus 2 team-level summary rows. Since our research question focuses on individual role prioritization, we filtered to keep only player rows by removing all rows where `position == 'team'`. We also converted `datacompleteness` to string type to avoid type-related issues during groupby operations.
 
-A critical part of the cleaning involved engineering the `gold_share` column. In the context of the data generating process, raw gold is often a "noisy" metric because it scales with game length and regional playstyles. By calculating a player's gold as a percentage of their team's total at the time of the game, we created a stable metric that purely reflects strategic priority rather than just game duration.
+The most critical step was creating the `gold_share` column. Raw gold totals are noisy as they scale with game length and regional playstyle. This means a player in a 40-minute game will naturally have more gold than one in a 25-minute game regardless of how prioritized they were. By calculating each player's gold as a percentage of their team's total gold at end of game, we created a normalized metric that purely reflects strategic priority independent of game duration. After cleaning, we filtered to only Mid and Bot lane rows for our core analysis.
 
 ### Univariate Analysis
-**Distribution of Total Gold Earned by All Players**: This histogram displays the wide distribution of total gold across all roles and match lengths. The long tail on the right represents players in "marathon" games who have accumulated massive wealth, illustrating the lack of a "gold cap" in the LoL ecosystem.
 
 <iframe
   src="assets/dist_player_gold.html"
@@ -38,7 +37,7 @@ A critical part of the cleaning involved engineering the `gold_share` column. In
   frameborder="0"
 ></iframe>
 
-**Distribution of Team Gold Share per Player**: This plot shows how team resources are partitioned. While a perfectly equal distribution would sit at 20% per player, the data is clearly centered slightly higher for carry roles, with peaks near roughly 24%, proving that teams systematically funnel more resources into specific members.
+The distribution of total gold earned across all players is roughly bell-shaped and centered around 12,000–15,000 gold, with a long right tail representing players in extended games who accumulate significantly more wealth. This confirms that raw gold is a poor basis for role comparison, as game length introduces substantial variance, which is exactly why we engineered the `gold_share` metric instead.
 
 <iframe
   src="assets/dist_gold_share.html"
@@ -47,10 +46,10 @@ A critical part of the cleaning involved engineering the `gold_share` column. In
   frameborder="0"
 ></iframe>
 
+The distribution of gold share per player shows two clear peaks: one around 13–14% representing Support players, and a larger cluster around 20–24% representing the four carry roles. This bimodal shape reflects the well-known Support tax in League of Legends, where one player deliberately sacrifices personal resources to empower teammates. The carry cluster sitting above the 20% equal-split baseline confirms that teams systematically funnel extra resources into specific roles.
+
 ### Bivariate Analysis
 Comparing Gold Share by Role, we found that ADCs (Bot) maintain a higher median and tighter distribution of gold share compared to Mid Laners. This suggests that while Mid Laners are influential, the 2025 meta consistently prioritizes the ADC as the primary resource beneficiary.
-
-**Comparison of Gold Share - Mid Laners vs. ADCs**: This box plot directly compares our two roles of interest. ADCs (Bot) show a higher median gold share and a tighter interquartile range compared to Mid Laners, suggesting that ADC resource priority is a more consistent "rule" in the 2025 meta.
 
 <iframe
   src="assets/dist_gold_share_pos.html"
@@ -59,7 +58,7 @@ Comparing Gold Share by Role, we found that ADCs (Bot) maintain a higher median 
   frameborder="0"
 ></iframe>
 
-**Gold Share by Role and Match Result**: By adding the match result as a factor, we see that winning teams tend to have slightly higher gold shares for their carries. This could indicate that successful "snowballing" allows carries to take an even larger slice of the team's economic pie.
+Comparing gold share between Mid Laners and ADCs reveals a consistent edge for the Bot lane role. ADCs maintain a higher median gold share and a notably tighter interquartile range, meaning not only do they receive more resources on average, but this prioritization is more consistent across teams and regions. Mid Laners show more variance: some teams heavily invest in their Mid Laner while others treat the role as a secondary carry. This suggests that while Mid Lane carry potential exists in the 2025 meta, ADC resource priority is closer to a universal rule than a team-specific choice.
 
 <iframe
   src="assets/dist_gold_share_pos_result.html"
@@ -67,6 +66,8 @@ Comparing Gold Share by Role, we found that ADCs (Bot) maintain a higher median 
   height="600"
   frameborder="0"
 ></iframe>
+
+When adding match result as a factor, winning teams show slightly higher gold shares for their carries compared to losing teams. This is consistent with a snowball effect: teams that are winning can afford to funnel even more resources into their carries, amplifying the lead. The pattern holds for both roles, but is more pronounced for ADCs.
 
 ### Interesting Aggregates
 Grouping by position highlights the mean gold share for the 2025 season:
@@ -98,6 +99,8 @@ Permutation tests (using 500 iterations and TVD as the test statistic) revealed 
 - **Test Statistic**: Difference in means (Mean ADC gold share - Mean Mid gold share).
 - **Result**: With an observed difference of 0.0156 and a p-value of 0.0, we reject the null hypothesis. There is a statistically significant resource prioritization for ADCs in the 2025 pro meta.
 
+With a p-value of 0.0 and an observed difference of ~0.0156, we reject the null hypothesis. The data provides overwhelming evidence that ADCs earn a statistically significantly higher share of team gold than Mid Laners in the 2025 professional meta. This is not a marginal difference: 1.56 percentage points across thousands of professional games represents a deliberate and consistent strategic choice by teams worldwide. The 2025 meta has firmly established the ADC as the primary resource beneficiary, and this finding directly informs how we approach our predictive model: gold advantage is not distributed equally, and understanding where it flows matters.
+
 ## Framing a Prediction Problem
 - Prediction Problem: Can we predict whether a team will win or lose a match based on their early-game resource and objective advantages (up to the 15-minute mark)?
 - Type: Binary Classification (Response: result)
@@ -105,25 +108,29 @@ Permutation tests (using 500 iterations and TVD as the test statistic) revealed 
 - Time of Prediction: All features are strictly limited to data available at or before 15 minutes to avoid data leakage
 
 ## Baseline Model
-Our baseline utilizes a Logistic Regression model with two features: `golddiffat15` (Quantitative) and `side` (Nominal, One-Hot Encoded). The model achieved a Baseline Accuracy of 0.7289. While this provides a strong foundation, it relies purely on a single snapshot of gold and ignores the strategic pressure of map objectives.
+Our baseline model uses Logistic Regression with two features: `golddiffat15` (quantitative) and `side` (nominal, one-hot encoded). This achieved a baseline accuracy of approximately **72.9%**. While this is a reasonable starting point, a limitation in this model is how it treats gold advantage as a static snapshot. For example, a team that is 2,000 gold ahead at 15 minutes but was 3,000 ahead at 10 minutes is actually losing momentum, while a team that clawed from -500 to +1,500 is on an upswing. Both look identical to this model. Additionally, the baseline does not take into account objective control. Dragons and Void Grubs, for example, provide permanent structural advantages that persist regardless of gold swings. A model blind to these factors is missing critical information about the true state of the game at 15 minutes.
 
 ## Final Model
 ### Feature Engineering and the DGP
-To capture the complexity of the 2025 meta, we engineered two original features:
-- **Lead Momentum**: Calculated as the growth in gold lead between 10 and 15 minutes. This captures the velocity of the game—whether a team is actively snowballing or their lead is stalling.
-- **Objective Density**: A sum of Dragons and Void Grubs secured by 15 minutes. This reflects how effectively a team translates their gold leads into permanent, structural map advantages.
+To address the baseline's limitations, we engineered two new features grounded in how professional League of Legends is actually played.
+
+One such feature we engineered is **Lead Momentum**, which attempts to capture the velocity of the gold lead between 10 and 15 minutes. More specifically, it captures how much the gold differential grew or shrank in that window. A team snowballing their lead is in a fundamentally different position than a team whose lead is stalling or being closed. This feature captures that trajectory in a way a static 15-minute snapshot cannot.
+
+The other, **Objective Density**, attempts to sum the total Dragons and Void Grubs secured by a team by 15 minutes. These objectives provide permanent buffs that compound over time. For example, a team with 2 dragons and 3 grubs has structural advantages that will impact the rest of the game regardless of gold swings. By combining these into a single density metric, we capture how effectively a team converts early momentum into durable map control.
 
 ### Modeling and Performance
-We implemented a **RandomForestClassifier** and used **GridSearchCV** to tune `max_depth`, `n_estimators`, `min_samples_split`, and `max_features`. Our final model reached an accuracy of **0.7610**, a clear improvement over the baseline. This demonstrates that game trajectory (Momentum) and structural pressure (Density) are more predictive than a simple gold snapshot.
+We also retained `golddiffat15` and `side` from the baseline, and applied a **StandardScaler** to all numeric features to ensure no single variable dominates the model. Using a **RandomForestClassifier** with **GridSearchCV** tuning across `max_depth`, `n_estimators`, `min_samples_split`, and `max_features,` our best model used `max_depth=5`, `max_features='sqrt'`, `min_samples_split=9`, and `n_estimators=6`. (CHANGE)
+
+The final model achieved an accuracy of **76.21%**, an improvement of approximately 3.31 percentage points over the baseline. This improvement demonstrates that game trajectory and objective control carry genuine predictive signal beyond a gold snapshot alone, which is consistent with how analysts and coaches would evaluate team performance in professional play.
 
 ## Fairness Analysis
 We investigated if our model was biased toward either the Blue Side or Red Side.
 - Metric: Precision (Predictive reliability of a "Win")
 - Null Hypothesis: The model is fair; precision for Blue and Red sides are roughly equal
-- Result: The observed difference was a negligible 0.0036 with a p-value of 0.8330
+- Result: The observed difference was a negligible 0.0134 with a p-value of 0.4560
 - Conclusion: We fail to reject the null hypothesis. Our model is statistically fair and provides equally reliable predictions regardless of which side of the map a team starts on.
 
-**Null Distribution of Absolute Precision Differences**: This histogram shows the empirical distribution of differences in precision generated under the null hypothesis. Our observed difference of 0.0036 (indicated by the red dashed line) sits deep within the bulk of the distribution, visually confirming that such a difference is extremely common due to random chance. We fail to reject the null hypothesis, concluding the model is statistically fair.
+With an observed precision difference of only 0.0134 and a p-value of 0.4560, we fail to reject the null hypothesis. Our model produces equally reliable win predictions for both Blue and Red side teams, despite the well-known asymmetries in map design that give each side different objective access. This result means our model has learned generalizable patterns about early-game advantages rather than overfit to side-specific tendencies.
 
 <iframe
   src="assets/fairness_permutation_test.html"
@@ -131,3 +138,5 @@ We investigated if our model was biased toward either the Blue Side or Red Side.
   height="600"
   frameborder="0"
 ></iframe>
+
+**Null Distribution of Absolute Precision Differences**: This histogram shows the empirical distribution of differences in precision generated under the null hypothesis. Our observed difference of 0.0036 (indicated by the red dashed line) sits deep within the bulk of the distribution, visually confirming that such a difference is extremely common due to random chance. We fail to reject the null hypothesis, concluding the model is statistically fair.
