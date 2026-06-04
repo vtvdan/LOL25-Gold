@@ -109,7 +109,7 @@ We ran two permutation tests to determine whether the missingness of `golddiffat
 We shuffled the missingness labels 500 times and compared the TVD of each shuffle to the observed TVD. The result was a p-value of **0.0**, meaning none of the 500 permutations produced a TVD as extreme as what we observed. We reject the null hypothesis: the missingness of `golddiffat15` does depend on `league`. This makes sense as certain leagues (like LPL) have incomplete data coverage, so the missingness is systematically associated with which tournament the match was played in.
 
 <iframe
-  src="assets/dist_league_golddiffat15_missingness.html"
+  src="assets/dist_league_golddiff_missingness.html"
   width="800"
   height="600"
   frameborder="0"
@@ -128,9 +128,16 @@ Having observed a difference in gold share between ADCs and Mid Laners in Step 2
 
 We chose a one-sided test because we have a directional hypothesis: based on the EDA, ADCs appear to be prioritized. The permutation test works by shuffling position labels 1,000 times and computing the difference in means each time, building a null distribution of what the difference would look like if position had no effect on gold share.
 
-**Observed Difference**: 0.01559 | **P-value**: 0.0
+**Observed Difference**: ~0.0156 | **P-value**: 0.0
 
 Since p < 0.05, we **reject the null hypothesis**. With an observed difference of around 1.56 percentage points and a p-value of 0.0 across 1,000 permutations, the data provides overwhelming evidence that ADCs systematically receive more gold than Mid Laners in the 2025 professional meta. This is not noise, but rather reflets a deliberate and consistent strategic choice made by professional teams worldwide. This finding directly motivates our prediction model: gold advantages are not distributed equally across roles, and understanding where resources flow is key to predicting match outcomes.
+
+<iframe
+  src="assets/hypothesis_test.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
 
 ## Framing a Prediction Problem
 - **Prediction Problem**: Can we predict whether a team will win or lose a match based on their early-game resource and objective advantages (up to the 15-minute mark)?
@@ -153,9 +160,9 @@ The baseline model uses **Logistic Regression** with two features: `golddiffat15
 - Nominal: 1 (`side`, one-hot encoded)
 - Ordinal: 0
 
-**Baseline Accuracy**: **~73.5%**
+**Baseline Accuracy**: **~72.99%**
 
-While 73.5% is a reasonable starting point, this model has a fundamental limitation. Essentially, it treats the game state as a static snapshot. For example, a team that is 2,000 gold ahead at 15 minutes but was 3,000 ahead at 10 minutes is actually losing momentum, while a team that clawed from -500 to +1,500 is on an upswing. Both look identical to this model. Additionally, the baseline completely ignores objective control. Dragons and Void Grubs, for example, grant permanent map pressure and structural advantages that persist for the rest of the game regardless of gold fluctuations. A model blind to these factors is missing critical information about the true state of the game at 15 minutes, which motivates the feature engineering in our final model.
+While 72.99% is a reasonable starting point, this model has a fundamental limitation. Essentially, it treats the game state as a static snapshot. For example, a team that is 2,000 gold ahead at 15 minutes but was 3,000 ahead at 10 minutes is actually losing momentum, while a team that clawed from -500 to +1,500 is on an upswing. Both look identical to this model. Additionally, the baseline completely ignores objective control. Dragons and Void Grubs, for example, grant permanent map pressure and structural advantages that persist for the rest of the game regardless of gold fluctuations. A model blind to these factors is missing critical information about the true state of the game at 15 minutes, which motivates the feature engineering in our final model.
 
 ## Final Model
 ### Feature Engineering
@@ -174,7 +181,7 @@ We tuned four hyperparameters using **GridSearchCV with 5-fold cross validation*
 
 **Final Model Accuracy**: **76.21%**
 
-Test accuracy improved from 73.5% in the baseline to 76.21% in the final model, demonstrating that game trajectory and objective control carry genuine predictive signal beyond a simple gold snapshot alone.
+Test accuracy improved from 72.99% in the baseline to 76.21% in the final model, demonstrating that game trajectory and objective control carry genuine predictive signal beyond a simple gold snapshot alone.
 
 ## Fairness Analysis
 We investigated whether our model produces equally reliable predictions for Blue Side and Red Side teams, given that map asymmetries give each side different objective access.
@@ -185,9 +192,9 @@ We investigated whether our model produces equally reliable predictions for Blue
 - **Test Statistic**: Absolute difference in precision
 - **Significance Level**: 0.05
 
-**Observed Difference**: 0.0134 | **P-value**: 0.4420
+**Observed Difference**: 0.0134 | **P-value**: 0.4370
 
-Since p = 0.442 > 0.05, we **fail to reject the null hypothesis**. The observed precision difference falls well within the range of what we would expect by chance. We conclude that the model produces equally reliable win predictions for both Blue and Red side teams, despite the well-known map asymmetries. This suggests the model has learned generalizable patterns about early-game advantages rather than overfit to side-specific tendencies.
+Since p = 0.437 > 0.05, we **fail to reject the null hypothesis**. The observed precision difference falls well within the range of what we would expect by chance. We conclude that the model produces equally reliable win predictions for both Blue and Red side teams, despite the well-known map asymmetries. This suggests the model has learned generalizable patterns about early-game advantages rather than overfit to side-specific tendencies.
 
 <iframe
   src="assets/fairness_permutation_test.html"
@@ -195,5 +202,3 @@ Since p = 0.442 > 0.05, we **fail to reject the null hypothesis**. The observed 
   height="600"
   frameborder="0"
 ></iframe>
-
-**Null Distribution of Absolute Precision Differences**: This histogram shows the empirical distribution of differences in precision generated under the null hypothesis. Our observed difference of 0.0036 (indicated by the red dashed line) sits deep within the bulk of the distribution, visually confirming that such a difference is extremely common due to random chance. We fail to reject the null hypothesis, concluding the model is statistically fair.
