@@ -46,8 +46,8 @@ We first examined the distribution of raw gold earned across all players. This g
 
 <iframe
   src="assets/dist_player_gold.html"
-  width="800"
-  height="500"
+  width="1000"
+  height="450"
   frameborder="0"
 ></iframe>
 
@@ -55,8 +55,8 @@ The distribution of total gold earned across all players is roughly bell-shaped 
 
 <iframe
   src="assets/dist_gold_share.html"
-  width="800"
-  height="500"
+  width="1000"
+  height="450"
   frameborder="0"
 ></iframe>
 
@@ -67,8 +67,8 @@ We then compared gold share specifically between Mid Laners and ADCs (Bot Lane) 
 
 <iframe
   src="assets/dist_gold_share_pos.html"
-  width="800"
-  height="500"
+  width="1000"
+  height="450"
   frameborder="0"
 ></iframe>
 
@@ -76,8 +76,8 @@ ADCs show a consistently higher median gold share than Mid Laners. The ADC distr
 
 <iframe
   src="assets/dist_gold_share_pos_result.html"
-  width="800"
-  height="500"
+  width="1000"
+  height="450"
   frameborder="0"
 ></iframe>
 
@@ -110,8 +110,8 @@ We shuffled the missingness labels 500 times and compared the TVD of each shuffl
 
 <iframe
   src="assets/dist_league_golddiff_missingness.html"
-  width="800"
-  height="500"
+  width="1000"
+  height="450"
   frameborder="0"
 ></iframe>
 
@@ -134,8 +134,8 @@ Since p < 0.05, we **reject the null hypothesis**. With an observed difference o
 
 <iframe
   src="assets/hypothesis_test.html"
-  width="800"
-  height="500"
+  width="1000"
+  height="450"
   frameborder="0"
 ></iframe>
 
@@ -198,7 +198,7 @@ Since p = 0.443 > 0.05, we **fail to reject the null hypothesis**. The observed 
 
 <iframe
   src="assets/fairness_permutation_test.html"
-  width="800"
-  height="500"
+  width="1000"
+  height="450"
   frameborder="0"
 ></iframe>
