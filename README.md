@@ -186,7 +186,7 @@ Test accuracy improved from 72.39% in the baseline to 76.21% in the final model,
 ## Fairness Analysis
 We investigated whether our model produces equally reliable predictions for **Blue Side** and **Red Side** teams, given that map asymmetries give each side different objective access.
 
-- **Metric**: Precision for predicting a win.
+- **Evaluation Metric**: Precision for predicting a win.
 - **Null Hypothesis (H<sub>0</sub>)**: The model is fair. Precision for Blue and Red sides are roughly equal, and any difference is due to random chance.
 - **Alternative Hypothesis (H<sub>1</sub>)**: The model is unfair. Precision differs between Blue and Red sides.
 - **Test Statistic**: Absolute difference in precision
